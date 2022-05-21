@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.z.ssm.dao.EmployeeMapper">
+  <resultMap id="BaseResultMap" type="com.z.ssm.bean.Employee">
+    <id column="emp_id" jdbcType="INTEGER" property="empId" />
+    <result column="emp_name" jdbcType="VARCHAR" property="empName" />
+    <result column="gender" jdbcType="CHAR" property="gender" />
+    <result column="hire_date" jdbcType="DATE" property="hireDate" />
+    <result column="salary" jdbcType="DECIMAL" property="salary" />
+    <result column="dept_id" jdbcType="INTEGER" property="deptId" />
+    <result column="create_date" jdbcType="DATE" property="createDate" />
+    <result column="update_date" jdbcType="DATE" property="updateDate" />
+  </resultMap>
+  <resultMap id="WithDeptResultMap" type="com.z.ssm.bean.Employee">
+    <id column="emp_id" jdbcType="INTEGER" property="empId" />
+    <result column="emp_name" jdbcType="VARCHAR" property="empName" />
+    <result column="gender" jdbcType="CHAR" property="gender" />
+    <result column="hire_date" jdbcType="DATE" property="hireDate" />
+    <result column="salary" jdbcType="DECIMAL" property="salary" />
+    <result column="dept_id" jdbcType="INTEGER" property="deptId" />
+    <!--多对一使用association-->
+    <association property="department" javaType="com.z.ssm.bean.Department">
+      <id column="dept_id" jdbcType="INTEGER" property="deptId" />
+      <result column="dept_name" jdbcType="VARCHAR" property="deptName" />
+    </association>
+
+  </resultMap>
+  <sql id="Example_Where_Clause">
+    <where>
+      <foreach collection="oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+              <if test="1==1">
+                and status = 1
+              </if>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Update_By_Example_Where_Clause">
+    <where>
+      <foreach collection="example.oredCriteria" item="criteria" separator="or">
+        <if test="criteria.valid">
+          <trim prefix="(" prefixOverrides="and" suffix=")">
+            <foreach collection="criteria.criteria" item="criterion">
+              <choose>
+                <when test="criterion.noValue">
+                  and ${criterion.condition}
+                </when>
+                <when test="criterion.singleValue">
+                  and ${criterion.condition} #{criterion.value}
+                </when>
+                <when test="criterion.betweenValue">
+                  and ${criterion.condition} #{criterion.value} and #{criterion.secondValue}
+                </when>
+                <when test="criterion.listValue">
+                  and ${criterion.condition}
+                  <foreach close=")" collection="criterion.value" item="listItem" open="(" separator=",">
+                    #{listItem}
+                  </foreach>
+                </when>
+              </choose>
+            </foreach>
+          </trim>
+        </if>
+      </foreach>
+    </where>
+  </sql>
+  <sql id="Base_Column_List">
+    emp_id, emp_name, gender, hire_date, salary, dept_id
+  </sql>
+  <sql id="WithDept_Column_List">
+    e.emp_id, e.emp_name, e.gender, e.hire_date, e.salary, e.dept_id, d.dept_id, d.dept_name
+  </sql>
+  <!--List<Employee> selectByExampleWithDept(EmployeeExample example);-->
+  <select id="selectByExampleWithDept" resultMap="WithDeptResultMap">
+    select
+    <if test="distinct">
+      distinct
+    </if>
+    <include refid="WithDept_Column_List" />
+    FROM employee e
+    LEFT JOIN dept d
+    ON e.dept_id = d.dept_id
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+    where e.status = 1
+    ORDER BY e.emp_id asc
+  </select>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from employee
+    where emp_id = #{empId,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    update employee set status = 0
+    where emp_id = #{empId,jdbcType=INTEGER}
+  </delete>
+  <delete id="deleteByExample" parameterType="com.z.ssm.bean.EmployeeExample">
+    update employee set status = 0
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </delete>
+  <insert id="insert" parameterType="com.z.ssm.bean.Employee">
+    insert into employee (emp_id, emp_name, gender,
+      hire_date, salary, dept_id, status, photo, create_date, update_date)
+    values (#{empId,jdbcType=INTEGER}, #{empName,jdbcType=VARCHAR}, #{gender,jdbcType=CHAR},
+      #{hireDate,jdbcType=DATE}, #{salary,jdbcType=DECIMAL}, #{deptId,jdbcType=INTEGER}, 1, #{photo,jdbcType=VARCHAR}, NOW(), NOW())
+  </insert>
+  <insert id="insertSelective" parameterType="com.z.ssm.bean.Employee">
+    insert into employee
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="empId != null">
+        emp_id,
+      </if>
+      <if test="empName != null">
+        emp_name,
+      </if>
+      <if test="gender != null">
+        gender,
+      </if>
+      <if test="hireDate != null">
+        hire_date,
+      </if>
+      <if test="salary != null">
+        salary,
+      </if>
+      <if test="deptId != null">
+        dept_id,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="photo != null">
+        photo,
+      </if>
+      <if test="createDate != null">
+        create_date,
+      </if>
+      <if test="updateDate != null">
+        update_date,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="empId != null">
+        #{empId,jdbcType=INTEGER},
+      </if>
+      <if test="empName != null">
+        #{empName,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null">
+        #{gender,jdbcType=CHAR},
+      </if>
+      <if test="hireDate != null">
+        #{hireDate,jdbcType=VARCHAR},
+      </if>
+      <if test="salary != null">
+        #{salary,jdbcType=VARCHAR},
+      </if>
+      <if test="deptId != null">
+        #{deptId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        1,
+      </if>
+      <if test="photo != null">
+        #{photo,jdbcType=VARCHAR}
+      </if>
+      <if test="createDate != null">
+        NOW(),
+      </if>
+      <if test="updateDate != null">
+        NOW(),
+      </if>
+    </trim>
+  </insert>
+  <select id="countByExample" parameterType="com.z.ssm.bean.EmployeeExample" resultType="java.lang.Long">
+    select count(*) from employee
+    <if test="_parameter != null">
+      <include refid="Example_Where_Clause" />
+    </if>
+  </select>
+
+  <update id="updateByPrimaryKeySelective" parameterType="com.z.ssm.bean.Employee">
+    update employee
+    <set>
+      <if test="empName != null">
+        emp_name = #{empName,jdbcType=VARCHAR},
+      </if>
+      <if test="gender != null">
+        gender = #{gender,jdbcType=CHAR},
+      </if>
+      <if test="hireDate != null">
+        hire_date = #{hireDate,jdbcType=DATE},
+      </if>
+      <if test="salary != null">
+        salary = #{salary,jdbcType=DECIMAL},
+      </if>
+      <if test="deptId != null">
+        dept_id = #{deptId,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=VARCHAR},
+      </if>
+      <if test="photo != null">
+        photo = #{photo,jdbcType=VARCHAR},
+      </if>
+        update_date = NOW()
+    </set>
+    where emp_id = #{empId,jdbcType=INTEGER}
+  </update>
+
+</mapper>
